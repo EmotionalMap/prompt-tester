@@ -79,6 +79,49 @@
                 transform: rotate(360deg);
             }
         }
+
+        .module-panel {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .module-panel.collapsed .module-content {
+            display: none;
+        }
+
+        .module-header {
+            background: #f9fafb;
+            border-radius: 0.5rem 0.5rem 0 0;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+        }
+
+        .module-panel.collapsed .module-header {
+            border-radius: 0.5rem;
+            border-bottom: none;
+        }
+
+        .drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+        }
+
+        .drag-handle:hover {
+            color: #6b7280;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .module-toggle {
+            cursor: pointer;
+        }
+
+        .module-toggle input[type="checkbox"] {
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -125,10 +168,19 @@
 
                         <!-- System Prompt Selection -->
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">System Prompts to Test</label>
-                            <div id="prompt-checkboxes"
+                            <label class="block text-sm font-medium text-gray-700 mb-2">System Prompt</label>
+                            <select id="selected-prompt" onchange="loadPromptModules()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select a system prompt...</option>
+                            </select>
+                        </div>
+
+                        <!-- Module Selection -->
+                        <div id="module-selection" class="mb-4 hidden">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Active Modules</label>
+                            <div id="module-toggles"
                                 class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-md p-3">
-                                <!-- Checkboxes will be populated here -->
+                                <!-- Module toggles will be populated here -->
                             </div>
                         </div>
 
@@ -201,13 +253,17 @@
                                 placeholder="Brief description of this prompt">
                         </div>
 
+                        <!-- Module Editor -->
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">System Prompt*</label>
-                            <textarea id="prompt-text" rows="25" required
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
-                                placeholder="You are a..."></textarea>
-                            <div class="text-xs text-gray-500 mt-1">
-                                <span id="char-count">0</span> characters
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="text-sm font-medium text-gray-700">Modules*</label>
+                                <button type="button" onclick="addModule()"
+                                    class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                                    + Add Module
+                                </button>
+                            </div>
+                            <div id="modules-container" class="space-y-3">
+                                <!-- Modules will be added here -->
                             </div>
                         </div>
 
@@ -257,6 +313,17 @@
         const API_BASE = 'http://localhost:4000/api';
         let systemPrompts = {};
         let testHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
+        let currentModules = {};
+        let moduleOrder = [];
+
+        // Base modules for fallback
+        const BASE_MODULES = {
+            DEFAULT: "You are a helpful AI assistant. Provide clear, accurate, and concise responses.",
+            RESPONSE_STRUCTURE: "Structure your responses with clear headings and bullet points where appropriate.",
+            WELCOME: "Begin interactions with a friendly greeting.",
+            GUIDELINES: "Follow ethical guidelines and provide helpful, harmless, and honest responses.",
+            CONTEXT_AWARENESS: "Consider the context of the conversation when responding."
+        };
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function () {
@@ -270,12 +337,6 @@
             document.getElementById('temperature').addEventListener('input', function (e) {
                 document.getElementById('temperature-value').textContent = e.target.value;
             });
-
-            // Character counter for system prompt textarea
-            document.getElementById('prompt-text').addEventListener('input', function (e) {
-                const charCount = e.target.value.length;
-                document.getElementById('char-count').textContent = charCount.toLocaleString();
-            });
         }
 
         async function loadSystemPrompts() {
@@ -283,7 +344,7 @@
                 const response = await fetch(`${API_BASE}/system-prompts`);
                 if (response.ok) {
                     systemPrompts = await response.json();
-                    populatePromptCheckboxes();
+                    populatePromptSelect();
                     populateExistingPrompts();
                 } else {
                     showError('Failed to load system prompts');
@@ -293,21 +354,53 @@
             }
         }
 
-        function populatePromptCheckboxes() {
-            const container = document.getElementById('prompt-checkboxes');
-            container.innerHTML = '';
+        function populatePromptSelect() {
+            const select = document.getElementById('selected-prompt');
+            select.innerHTML = '<option value="">Select a system prompt...</option>';
 
             Object.entries(systemPrompts).forEach(([id, prompt]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `${prompt.name} - ${prompt.description || 'No description'}`;
+                select.appendChild(option);
+            });
+        }
+
+        function loadPromptModules() {
+            const promptId = document.getElementById('selected-prompt').value;
+            const moduleSection = document.getElementById('module-selection');
+            const moduleToggles = document.getElementById('module-toggles');
+
+            if (!promptId) {
+                moduleSection.classList.add('hidden');
+                return;
+            }
+
+            const prompt = systemPrompts[promptId];
+            if (!prompt) return;
+
+            moduleSection.classList.remove('hidden');
+            moduleToggles.innerHTML = '';
+
+            const modules = prompt.modules || {};
+            const order = prompt.order || Object.keys(modules);
+
+            order.forEach(moduleName => {
+                const moduleText = modules[moduleName] || BASE_MODULES[moduleName] || '';
                 const div = document.createElement('div');
-                div.className = 'flex items-center';
+                div.className = 'flex items-start space-x-2 module-toggle';
+
                 div.innerHTML = `
-                    <input type="checkbox" id="prompt-${id}" value="${id}" class="mr-2">
-                    <label for="prompt-${id}" class="text-sm cursor-pointer flex-1">
-                        <strong>${prompt.name}</strong>
-                        ${prompt.description ? `<br><span class="text-gray-500">${prompt.description}</span>` : ''}
+                    <input type="checkbox" id="module-${moduleName}" value="${moduleName}" 
+                           class="mt-1" checked>
+                    <label for="module-${moduleName}" class="text-sm cursor-pointer flex-1">
+                        <strong>${moduleName}</strong>
+                        <div class="text-gray-500 text-xs mt-1 max-h-16 overflow-y-auto">
+                            ${moduleText.substring(0, 150)}${moduleText.length > 150 ? '...' : ''}
+                        </div>
                     </label>
                 `;
-                container.appendChild(div);
+                moduleToggles.appendChild(div);
             });
         }
 
@@ -318,6 +411,10 @@
             Object.entries(systemPrompts).forEach(([id, prompt]) => {
                 const div = document.createElement('div');
                 div.className = 'border border-gray-200 rounded-lg p-3 card-hover';
+
+                const modules = prompt.modules || {};
+                const moduleCount = Object.keys(modules).length;
+
                 div.innerHTML = `
                     <div class="flex justify-between items-start mb-2">
                         <div>
@@ -330,9 +427,9 @@
                         </div>
                     </div>
                     ${prompt.description ? `<p class="text-sm text-gray-600 mb-2">${prompt.description}</p>` : ''}
-                    <div class="text-xs text-gray-400 bg-gray-50 p-2 rounded max-h-20 overflow-y-auto">
-                        <div class="font-mono whitespace-pre-wrap">${prompt.prompt.substring(0, 200)}${prompt.prompt.length > 200 ? '...' : ''}</div>
-                        <div class="text-right mt-1 font-sans">${prompt.prompt.length} characters</div>
+                    <div class="text-xs text-gray-400">
+                        <div>${moduleCount} modules: ${(prompt.order || Object.keys(modules)).join(', ')}</div>
+                        <div class="text-right mt-1">Created: ${new Date(prompt.created_at || '').toLocaleDateString()}</div>
                     </div>
                 `;
                 container.appendChild(div);
@@ -341,16 +438,20 @@
 
         async function runTest() {
             const userPrompt = document.getElementById('user-prompt').value.trim();
+            const promptId = document.getElementById('selected-prompt').value;
+
             if (!userPrompt) {
                 showError('Please enter a user prompt');
                 return;
             }
 
-            const selectedPrompts = Array.from(document.querySelectorAll('#prompt-checkboxes input:checked')).map(cb => cb.value);
-            if (selectedPrompts.length === 0) {
-                showError('Please select at least one system prompt to test');
+            if (!promptId) {
+                showError('Please select a system prompt');
                 return;
             }
+
+            // Get selected modules
+            const selectedModules = Array.from(document.querySelectorAll('#module-toggles input:checked')).map(cb => cb.value);
 
             const temperature = parseFloat(document.getElementById('temperature').value);
             const maxTokens = parseInt(document.getElementById('max-tokens').value);
@@ -368,7 +469,7 @@
             resultsContainer.innerHTML = `
                 <div class="text-center py-8">
                     <div class="spinner mx-auto mb-4"></div>
-                    <p class="text-gray-600">Testing ${selectedPrompts.length} system prompts...</p>
+                    <p class="text-gray-600">Testing system prompt with ${selectedModules.length} modules...</p>
                 </div>
             `;
 
@@ -378,8 +479,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userPrompt,
-                        promptIds: selectedPrompts,
-                        options
+                        promptIds: [promptId],
+                        options,
+                        modulesOrder: selectedModules
                     })
                 });
 
@@ -570,6 +672,113 @@
             }
         }
 
+        // Module management functions
+        function addModule() {
+            const container = document.getElementById('modules-container');
+
+            const modulePanel = document.createElement('div');
+            modulePanel.className = 'module-panel';
+            modulePanel.innerHTML = `
+                <div class="module-header flex items-center justify-between p-3" onclick="toggleModule(this)">
+                    <div class="flex items-center space-x-2">
+                        <span class="drag-handle">⋮⋮</span>
+                        <input type="text" class="module-name font-medium bg-transparent border-none focus:outline-none focus:bg-white focus:border focus:border-blue-500 rounded px-1" 
+                               placeholder="MODULE_NAME" onclick="event.stopPropagation()">
+                        <span class="text-sm text-gray-500 module-char-count">0 chars</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="event.stopPropagation(); removeModule(this)" 
+                                class="text-red-600 hover:text-red-700 text-sm">Remove</button>
+                        <span class="collapse-indicator">▼</span>
+                    </div>
+                </div>
+                <div class="module-content p-3">
+                    <textarea class="module-text w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                              rows="6" placeholder="Module content..."></textarea>
+                </div>
+            `;
+
+            container.appendChild(modulePanel);
+
+            // Setup event listeners for the new module
+            setupModuleEventListeners(modulePanel);
+        }
+
+        function setupModuleEventListeners(modulePanel) {
+            const nameInput = modulePanel.querySelector('.module-name');
+            const textArea = modulePanel.querySelector('.module-text');
+            const charCount = modulePanel.querySelector('.module-char-count');
+
+            textArea.addEventListener('input', function () {
+                charCount.textContent = this.value.length + ' chars';
+            });
+        }
+
+        function toggleModule(header) {
+            const panel = header.parentElement;
+            const indicator = header.querySelector('.collapse-indicator');
+
+            panel.classList.toggle('collapsed');
+            indicator.textContent = panel.classList.contains('collapsed') ? '▶' : '▼';
+        }
+
+        function removeModule(button) {
+            const modulePanel = button.closest('.module-panel');
+            modulePanel.remove();
+        }
+
+        function moveModule(button, direction) {
+            const modulePanel = button.closest('.module-panel');
+            const container = modulePanel.parentElement;
+
+            if (direction === 'up' && modulePanel.previousElementSibling) {
+                container.insertBefore(modulePanel, modulePanel.previousElementSibling);
+            } else if (direction === 'down' && modulePanel.nextElementSibling) {
+                container.insertBefore(modulePanel.nextElementSibling, modulePanel);
+            }
+        }
+
+        function collectModuleData() {
+            const modules = {};
+            const order = [];
+
+            document.querySelectorAll('.module-panel').forEach(panel => {
+                const nameInput = panel.querySelector('.module-name');
+                const textArea = panel.querySelector('.module-text');
+
+                const name = nameInput.value.trim().toUpperCase();
+                const text = textArea.value.trim();
+
+                if (name && text) {
+                    modules[name] = text;
+                    order.push(name);
+                }
+            });
+
+            return { modules, order };
+        }
+
+        function loadModulesIntoEditor(modules, order) {
+            const container = document.getElementById('modules-container');
+            container.innerHTML = '';
+
+            const moduleOrder = order || Object.keys(modules);
+
+            moduleOrder.forEach(moduleName => {
+                const moduleText = modules[moduleName] || '';
+                addModule();
+
+                const lastPanel = container.lastElementChild;
+                const nameInput = lastPanel.querySelector('.module-name');
+                const textArea = lastPanel.querySelector('.module-text');
+                const charCount = lastPanel.querySelector('.module-char-count');
+
+                nameInput.value = moduleName;
+                textArea.value = moduleText;
+                charCount.textContent = moduleText.length + ' chars';
+            });
+        }
+
         async function savePrompt(event) {
             event.preventDefault();
 
@@ -577,14 +786,15 @@
             const id = document.getElementById('prompt-id').value.trim();
             const name = document.getElementById('prompt-name').value.trim();
             const description = document.getElementById('prompt-description').value.trim();
-            const promptText = document.getElementById('prompt-text').value.trim();
 
-            if (!id || !name || !promptText) {
-                showError('Please fill in all required fields');
+            const { modules, order } = collectModuleData();
+
+            if (!id || !name || Object.keys(modules).length === 0) {
+                showError('Please fill in all required fields and add at least one module');
                 return;
             }
 
-            const data = { id, name, description, prompt: promptText };
+            const data = { id, name, description, modules, order };
 
             try {
                 let response;
@@ -617,6 +827,21 @@
             }
         }
 
+        function editPrompt(id) {
+            const prompt = systemPrompts[id];
+            if (!prompt) return;
+
+            document.getElementById('edit-prompt-id').value = id;
+            document.getElementById('prompt-id').value = id;
+            document.getElementById('prompt-id').readOnly = true;
+            document.getElementById('prompt-name').value = prompt.name;
+            document.getElementById('prompt-description').value = prompt.description || '';
+
+            loadModulesIntoEditor(prompt.modules || {}, prompt.order || []);
+
+            showTab('management');
+        }
+
         async function deletePrompt(id) {
             if (!confirm(`Are you sure you want to delete the prompt "${systemPrompts[id].name}"?`)) {
                 return;
@@ -645,8 +870,7 @@
             document.getElementById('prompt-id').readOnly = false;
             document.getElementById('prompt-name').value = '';
             document.getElementById('prompt-description').value = '';
-            document.getElementById('prompt-text').value = '';
-            document.getElementById('char-count').textContent = '0';
+            document.getElementById('modules-container').innerHTML = '';
         }
 
         function showTab(tabName) {
@@ -670,12 +894,10 @@
         }
 
         function showError(message) {
-            // Simple alert for now - could be improved with a toast system
             alert('Error: ' + message);
         }
 
         function showSuccess(message) {
-            // Simple alert for now - could be improved with a toast system
             alert('Success: ' + message);
         }
     </script>
