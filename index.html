@@ -4,273 +4,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LLM Testing Interface</title>
+    <title>GPT-4o System Prompt Testing Lab</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        @import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+        .card-hover {
+            transition: all 0.3s ease;
         }
 
-        .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            padding: 30px;
-        }
-
-        .input-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        .output-section {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #1f2937;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .preset-buttons {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .preset-btn {
-            padding: 12px 16px;
-            border: 2px solid #e5e7eb;
-            background: white;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-            font-weight: 500;
-            text-align: center;
-        }
-
-        .preset-btn:hover {
-            border-color: #4f46e5;
-            background: #f8fafc;
-            transform: translateY(-1px);
-        }
-
-        .preset-btn.active {
-            border-color: #4f46e5;
-            background: #4f46e5;
-            color: white;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-        }
-
-        .form-group textarea,
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            transition: border-color 0.2s ease;
-            font-family: inherit;
-        }
-
-        .form-group textarea:focus,
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #4f46e5;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .param-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .param-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .param-group label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 5px;
-            color: #6b7280;
-        }
-
-        .param-group input {
-            padding: 8px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 25px;
-        }
-
-        .btn {
-            padding: 14px 24px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            color: white;
-            flex: 1;
-        }
-
-        .btn-primary:hover {
+        .card-hover:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-            border: 1px solid #d1d5db;
+        .response-card {
+            min-height: 200px;
+            border-left: 4px solid #3b82f6;
         }
 
-        .btn-secondary:hover {
-            background: #e5e7eb;
+        .response-card.error {
+            border-left-color: #ef4444;
         }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1rem;
         }
 
-        .response-container {
-            margin-top: 20px;
+        @media (max-width: 768px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .response-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            min-height: 150px;
-            position: relative;
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
         }
 
-        .response-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
-        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
 
-        .response-meta {
-            font-size: 0.85rem;
-            color: #6b7280;
-            display: flex;
-            gap: 15px;
-        }
-
-        .response-text {
-            line-height: 1.6;
-            color: #1f2937;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            color: #6b7280;
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
             width: 20px;
             height: 20px;
-            border: 2px solid #e5e7eb;
-            border-top: 2px solid #4f46e5;
-            border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-right: 10px;
+            display: inline-block;
+            margin-right: 8px;
         }
 
         @keyframes spin {
@@ -282,173 +79,174 @@
                 transform: rotate(360deg);
             }
         }
-
-        .error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .backend-selector {
-            margin-bottom: 20px;
-        }
-
-        .backend-options {
-            display: flex;
-            gap: 10px;
-        }
-
-        .backend-option {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #e5e7eb;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-        }
-
-        .backend-option.active {
-            border-color: #4f46e5;
-            background: #4f46e5;
-            color: white;
-        }
-
-        .comparison-view {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .comparison-response {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            min-height: 200px;
-        }
-
-        .comparison-title {
-            font-weight: 600;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-
-            .preset-buttons {
-                grid-template-columns: 1fr;
-            }
-
-            .param-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .comparison-view {
-                grid-template-columns: 1fr;
-            }
-        }
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 LLM Testing Interface</h1>
-            <p>Test your local and OpenAI models with different prompts and parameters</p>
-        </div>
-
-        <div class="main-content">
-            <div class="input-section">
-                <h2 class="section-title">⚙️ Configuration</h2>
-
-                <div class="backend-selector">
-                    <label>Backend Mode:</label>
-                    <div class="backend-options">
-                        <div class="backend-option active" data-mode="single">Single Backend</div>
-                        <div class="backend-option" data-mode="compare">Compare Both</div>
-                    </div>
-                </div>
-
-                <div class="preset-buttons">
-                    <div class="preset-btn" data-preset="creative">
-                        <strong>Creative</strong><br>
-                        <small>High creativity</small>
-                    </div>
-                    <div class="preset-btn" data-preset="balanced">
-                        <strong>Balanced</strong><br>
-                        <small>General use</small>
-                    </div>
-                    <div class="preset-btn" data-preset="focused">
-                        <strong>Focused</strong><br>
-                        <small>Analytical tasks</small>
-                    </div>
-                    <div class="preset-btn" data-preset="precise">
-                        <strong>Precise</strong><br>
-                        <small>Technical accuracy</small>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="systemPrompt">System Prompt:</label>
-                    <textarea id="systemPrompt" rows="4"
-                        placeholder="You are a helpful AI assistant...">You are a helpful AI assistant. Provide clear, accurate, and concise responses.</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="userPrompt">User Prompt:</label>
-                    <textarea id="userPrompt" rows="3"
-                        placeholder="Enter your question or prompt here...">Explain quantum computing in simple terms.</textarea>
-                </div>
-
-                <div class="param-grid">
-                    <div class="param-group">
-                        <label for="temperature">Temperature:</label>
-                        <input type="number" id="temperature" min="0" max="2" step="0.1" value="0.7">
-                    </div>
-                    <div class="param-group">
-                        <label for="maxTokens">Max Tokens:</label>
-                        <input type="number" id="maxTokens" min="1" max="4096" value="1024">
-                    </div>
-                    <div class="param-group">
-                        <label for="seed">Seed (optional):</label>
-                        <input type="number" id="seed" placeholder="Leave empty for random">
-                    </div>
-                    <div class="param-group">
-                        <label for="apiUrl">Backend URL:</label>
-                        <input type="text" id="apiUrl" value="http://localhost:4000"
-                            placeholder="http://localhost:4000">
-                    </div>
-                </div>
-
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="generateBtn">
-                        <span>🚀</span>
-                        Generate Response
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">🧪 GPT-4o System Prompt Testing Lab</h1>
+                <div class="flex space-x-4">
+                    <button onclick="showTab('testing')" id="testing-tab"
+                        class="px-4 py-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors">
+                        Testing
                     </button>
-                    <button class="btn btn-secondary" id="clearBtn">
-                        <span>🗑️</span>
-                        Clear
+                    <button onclick="showTab('management')" id="management-tab"
+                        class="px-4 py-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors">
+                        Prompt Management
+                    </button>
+                    <button onclick="showTab('history')" id="history-tab"
+                        class="px-4 py-2 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors">
+                        Test History
                     </button>
                 </div>
             </div>
+        </div>
+    </header>
 
-            <div class="output-section">
-                <h2 class="section-title">📝 Response</h2>
-                <div id="responseContainer">
-                    <div style="text-align: center; color: #6b7280; padding: 40px;">
-                        <div style="font-size: 3rem; margin-bottom: 10px;">💭</div>
-                        <p>Configure your prompt and click "Generate Response" to see the AI's output here.</p>
+    <div class="container mx-auto px-6 py-8">
+        <!-- Testing Tab -->
+        <div id="testing-panel" class="tab-panel">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Input Panel -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+                        <h2 class="text-xl font-semibold mb-4">Test Configuration</h2>
+
+                        <!-- User Prompt -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">User Prompt</label>
+                            <textarea id="user-prompt" rows="4"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Enter your test prompt here..."></textarea>
+                        </div>
+
+                        <!-- System Prompt Selection -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">System Prompts to Test</label>
+                            <div id="prompt-checkboxes"
+                                class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-md p-3">
+                                <!-- Checkboxes will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Parameters -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Temperature</label>
+                            <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" class="w-full">
+                            <span class="text-sm text-gray-500" id="temperature-value">0.7</span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Max Tokens</label>
+                            <input type="number" id="max-tokens" value="1024" min="1" max="4096"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Seed (optional)</label>
+                            <input type="number" id="seed" placeholder="Leave blank for random"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <button id="test-btn" onclick="runTest()"
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            Run Test
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="lg:col-span-2">
+                    <div id="results-container" class="space-y-6">
+                        <div class="text-center text-gray-500 py-12">
+                            <div class="text-6xl mb-4">🚀</div>
+                            <p>Configure your test and click "Run Test" to see results</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Tab -->
+        <div id="management-panel" class="tab-panel hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Create/Edit Form -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Create/Edit System Prompt</h2>
+
+                    <form id="prompt-form" onsubmit="savePrompt(event)">
+                        <input type="hidden" id="edit-prompt-id">
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ID*</label>
+                            <input type="text" id="prompt-id" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="unique-prompt-id">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Name*</label>
+                            <input type="text" id="prompt-name" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Descriptive name">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                            <input type="text" id="prompt-description"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Brief description of this prompt">
+                        </div>
+
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">System Prompt*</label>
+                            <textarea id="prompt-text" rows="25" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
+                                placeholder="You are a..."></textarea>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <span id="char-count">0</span> characters
+                            </div>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button type="submit"
+                                class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors font-medium">
+                                Save Prompt
+                            </button>
+                            <button type="button" onclick="clearForm()"
+                                class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                                Clear
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Existing Prompts -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Existing System Prompts</h2>
+                    <div id="existing-prompts" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- Prompts will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history-panel" class="tab-panel hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">Test History</h2>
+                    <button onclick="clearHistory()" class="text-red-600 hover:text-red-700 font-medium">
+                        Clear History
+                    </button>
+                </div>
+                <div id="history-container" class="space-y-6">
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="text-4xl mb-2">📝</div>
+                        <p>No test history yet. Run some tests to see results here.</p>
                     </div>
                 </div>
             </div>
@@ -456,258 +254,430 @@
     </div>
 
     <script>
-        // State management
-        let currentMode = 'single';
-        let presets = {};
-        let isGenerating = false;
+        const API_BASE = 'http://localhost:4000/api';
+        let systemPrompts = {};
+        let testHistory = JSON.parse(localStorage.getItem('testHistory') || '[]');
 
-        // DOM elements
-        const elements = {
-            backendOptions: document.querySelectorAll('.backend-option'),
-            presetBtns: document.querySelectorAll('.preset-btn'),
-            systemPrompt: document.getElementById('systemPrompt'),
-            userPrompt: document.getElementById('userPrompt'),
-            temperature: document.getElementById('temperature'),
-            maxTokens: document.getElementById('maxTokens'),
-            seed: document.getElementById('seed'),
-            apiUrl: document.getElementById('apiUrl'),
-            generateBtn: document.getElementById('generateBtn'),
-            clearBtn: document.getElementById('clearBtn'),
-            responseContainer: document.getElementById('responseContainer')
-        };
-
-        // Initialize
-        async function init() {
-            await loadPresets();
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function () {
+            loadSystemPrompts();
             setupEventListeners();
+            showTab('testing');
+            loadHistory();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('temperature').addEventListener('input', function (e) {
+                document.getElementById('temperature-value').textContent = e.target.value;
+            });
+
+            // Character counter for system prompt textarea
+            document.getElementById('prompt-text').addEventListener('input', function (e) {
+                const charCount = e.target.value.length;
+                document.getElementById('char-count').textContent = charCount.toLocaleString();
+            });
         }
 
-        // Load presets from backend
-        async function loadPresets() {
+        async function loadSystemPrompts() {
             try {
-                const response = await fetch(`${elements.apiUrl.value}/api/presets`);
-                presets = await response.json();
+                const response = await fetch(`${API_BASE}/system-prompts`);
+                if (response.ok) {
+                    systemPrompts = await response.json();
+                    populatePromptCheckboxes();
+                    populateExistingPrompts();
+                } else {
+                    showError('Failed to load system prompts');
+                }
             } catch (error) {
-                console.error('Failed to load presets:', error);
-                // Fallback presets
-                presets = {
-                    creative: { temperature: 0.9, max_tokens: 400 },
-                    balanced: { temperature: 0.7, max_tokens: 300 },
-                    focused: { temperature: 0.3, max_tokens: 200 },
-                    precise: { temperature: 0.1, max_tokens: 150 }
-                };
+                showError('Error loading system prompts: ' + error.message);
             }
         }
 
-        // Setup event listeners
-        function setupEventListeners() {
-            // Backend mode selection
-            elements.backendOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    elements.backendOptions.forEach(opt => opt.classList.remove('active'));
-                    option.classList.add('active');
-                    currentMode = option.dataset.mode;
-                });
-            });
+        function populatePromptCheckboxes() {
+            const container = document.getElementById('prompt-checkboxes');
+            container.innerHTML = '';
 
-            // Preset selection
-            elements.presetBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    elements.presetBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    const presetName = btn.dataset.preset;
-                    const preset = presets[presetName];
-
-                    if (preset) {
-                        elements.temperature.value = preset.temperature || 0.7;
-                        elements.maxTokens.value = preset.max_tokens || 1024;
-                    }
-                });
-            });
-
-            // Generate button
-            elements.generateBtn.addEventListener('click', generateResponse);
-
-            // Clear button
-            elements.clearBtn.addEventListener('click', clearResponse);
-
-            // Enter key in textareas
-            elements.userPrompt.addEventListener('keydown', (e) => {
-                if (e.ctrlKey && e.key === 'Enter') {
-                    generateResponse();
-                }
+            Object.entries(systemPrompts).forEach(([id, prompt]) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center';
+                div.innerHTML = `
+                    <input type="checkbox" id="prompt-${id}" value="${id}" class="mr-2">
+                    <label for="prompt-${id}" class="text-sm cursor-pointer flex-1">
+                        <strong>${prompt.name}</strong>
+                        ${prompt.description ? `<br><span class="text-gray-500">${prompt.description}</span>` : ''}
+                    </label>
+                `;
+                container.appendChild(div);
             });
         }
 
-        // Generate response
-        async function generateResponse() {
-            if (isGenerating) return;
+        function populateExistingPrompts() {
+            const container = document.getElementById('existing-prompts');
+            container.innerHTML = '';
 
-            const systemPrompt = elements.systemPrompt.value.trim();
-            const userPrompt = elements.userPrompt.value.trim();
+            Object.entries(systemPrompts).forEach(([id, prompt]) => {
+                const div = document.createElement('div');
+                div.className = 'border border-gray-200 rounded-lg p-3 card-hover';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-medium">${prompt.name}</h4>
+                            <p class="text-sm text-gray-500">ID: ${id}</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="editPrompt('${id}')" class="text-blue-600 hover:text-blue-700 text-sm">Edit</button>
+                            ${id !== 'default' ? `<button onclick="deletePrompt('${id}')" class="text-red-600 hover:text-red-700 text-sm">Delete</button>` : ''}
+                        </div>
+                    </div>
+                    ${prompt.description ? `<p class="text-sm text-gray-600 mb-2">${prompt.description}</p>` : ''}
+                    <div class="text-xs text-gray-400 bg-gray-50 p-2 rounded max-h-20 overflow-y-auto">
+                        <div class="font-mono whitespace-pre-wrap">${prompt.prompt.substring(0, 200)}${prompt.prompt.length > 200 ? '...' : ''}</div>
+                        <div class="text-right mt-1 font-sans">${prompt.prompt.length} characters</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
 
+        async function runTest() {
+            const userPrompt = document.getElementById('user-prompt').value.trim();
             if (!userPrompt) {
                 showError('Please enter a user prompt');
                 return;
             }
 
-            isGenerating = true;
-            elements.generateBtn.disabled = true;
-            elements.generateBtn.innerHTML = '<div class="spinner"></div>Generating...';
+            const selectedPrompts = Array.from(document.querySelectorAll('#prompt-checkboxes input:checked')).map(cb => cb.value);
+            if (selectedPrompts.length === 0) {
+                showError('Please select at least one system prompt to test');
+                return;
+            }
+
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const maxTokens = parseInt(document.getElementById('max-tokens').value);
+            const seed = document.getElementById('seed').value ? parseInt(document.getElementById('seed').value) : undefined;
+
+            const options = { temperature, max_tokens: maxTokens };
+            if (seed !== undefined) options.seed = seed;
+
+            // Show loading state
+            const testBtn = document.getElementById('test-btn');
+            testBtn.innerHTML = '<div class="spinner"></div>Running Test...';
+            testBtn.disabled = true;
+
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="spinner mx-auto mb-4"></div>
+                    <p class="text-gray-600">Testing ${selectedPrompts.length} system prompts...</p>
+                </div>
+            `;
 
             try {
-                if (currentMode === 'single') {
-                    await generateSingleResponse(systemPrompt, userPrompt);
+                const response = await fetch(`${API_BASE}/test-prompts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userPrompt,
+                        promptIds: selectedPrompts,
+                        options
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayResults(data);
+                    saveToHistory(data);
                 } else {
-                    await generateComparisonResponse(systemPrompt, userPrompt);
+                    const error = await response.json();
+                    showError('Test failed: ' + (error.error || 'Unknown error'));
                 }
             } catch (error) {
-                showError(`Generation failed: ${error.message}`);
+                showError('Error running test: ' + error.message);
             } finally {
-                isGenerating = false;
-                elements.generateBtn.disabled = false;
-                elements.generateBtn.innerHTML = '<span>🚀</span>Generate Response';
+                testBtn.innerHTML = 'Run Test';
+                testBtn.disabled = false;
             }
         }
 
-        // Generate single response
-        async function generateSingleResponse(systemPrompt, userPrompt) {
-            const options = {
-                temperature: parseFloat(elements.temperature.value),
-                max_tokens: parseInt(elements.maxTokens.value)
-            };
+        function displayResults(data) {
+            const container = document.getElementById('results-container');
+            container.innerHTML = '';
 
-            if (elements.seed.value) {
-                options.seed = parseInt(elements.seed.value);
-            }
+            // Summary
+            const summary = document.createElement('div');
+            summary.className = 'bg-blue-50 border-l-4 border-blue-400 p-4 mb-6';
+            summary.innerHTML = `
+                <h3 class="font-medium text-blue-800 mb-2">Test Results Summary</h3>
+                <p class="text-blue-700">
+                    <strong>User Prompt:</strong> "${data.user_prompt.substring(0, 100)}${data.user_prompt.length > 100 ? '...' : ''}"<br>
+                    <strong>Model:</strong> ${data.model}<br>
+                    <strong>Tests:</strong> ${data.success_count}/${data.test_count} successful
+                </p>
+            `;
+            container.appendChild(summary);
 
-            const payload = {
-                systemPrompt,
-                userPrompt,
-                options
-            };
+            // Results grid
+            const resultsGrid = document.createElement('div');
+            resultsGrid.className = 'comparison-grid';
 
-            const response = await fetch(`${elements.apiUrl.value}/api/completions`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+            Object.entries(data.results).forEach(([promptId, result]) => {
+                const card = document.createElement('div');
+                card.className = `response-card bg-white rounded-lg shadow-lg p-6 fade-in ${result.error ? 'error' : ''}`;
+
+                if (result.error) {
+                    card.innerHTML = `
+                        <div class="flex items-center mb-3">
+                            <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                            <h3 class="font-semibold text-red-700">${systemPrompts[promptId]?.name || promptId}</h3>
+                        </div>
+                        <div class="text-red-600 bg-red-50 p-3 rounded">
+                            <strong>Error:</strong> ${result.error}
+                        </div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                <h3 class="font-semibold text-gray-800">${result.system_prompt_name}</h3>
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                ${result.usage?.total_tokens || 0} tokens
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="text-xs text-gray-500 mb-1">System Prompt Preview:</div>
+                            <div class="text-xs bg-gray-50 p-2 rounded max-h-16 overflow-y-auto font-mono">
+                                ${result.system_prompt_text.substring(0, 200)}${result.system_prompt_text.length > 200 ? '...' : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="text-sm font-medium text-gray-700 mb-2">Response:</div>
+                            <div class="bg-gray-50 p-3 rounded max-h-64 overflow-y-auto whitespace-pre-wrap text-sm">
+                                ${result.text}
+                            </div>
+                        </div>
+                        
+                        <div class="text-xs text-gray-500 border-t pt-2">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>Temperature: ${result.parameters_used?.temperature || 'N/A'}</div>
+                                <div>Max Tokens: ${result.parameters_used?.max_tokens || 'N/A'}</div>
+                                <div>Prompt Tokens: ${result.usage?.prompt_tokens || 0}</div>
+                                <div>Completion Tokens: ${result.usage?.completion_tokens || 0}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                resultsGrid.appendChild(card);
             });
 
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Request failed');
-            }
-
-            const result = await response.json();
-            displaySingleResponse(result);
+            container.appendChild(resultsGrid);
         }
 
-        // Generate comparison response
-        async function generateComparisonResponse(systemPrompt, userPrompt) {
-            const options = {
-                temperature: parseFloat(elements.temperature.value),
-                max_tokens: parseInt(elements.maxTokens.value)
+        function saveToHistory(testData) {
+            const historyEntry = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                userPrompt: testData.user_prompt,
+                results: testData.results,
+                successCount: testData.success_count,
+                testCount: testData.test_count,
+                model: testData.model
             };
 
-            if (elements.seed.value) {
-                options.seed = parseInt(elements.seed.value);
+            testHistory.unshift(historyEntry);
+
+            // Keep only last 50 entries
+            if (testHistory.length > 50) {
+                testHistory = testHistory.slice(0, 50);
             }
 
-            const payload = {
-                systemPrompt,
-                userPrompt,
-                options
-            };
-
-            const response = await fetch(`${elements.apiUrl.value}/api/switch-backend`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                throw new Error('Comparison request failed');
-            }
-
-            const result = await response.json();
-            displayComparisonResponse(result);
+            localStorage.setItem('testHistory', JSON.stringify(testHistory));
+            loadHistory();
         }
 
-        // Display single response
-        function displaySingleResponse(result) {
-            const html = `
-                <div class="response-box">
-                    <div class="response-header">
-                        <strong>Response</strong>
-                        <div class="response-meta">
-                            <span>Backend: ${result.backend}</span>
-                            <span>Model: ${result.model}</span>
-                            ${result.performance?.tokens_per_second ?
-                    `<span>Speed: ${result.performance.tokens_per_second.toFixed(1)} tok/s</span>` : ''}
+        function loadHistory() {
+            const container = document.getElementById('history-container');
+
+            if (testHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="text-4xl mb-2">📝</div>
+                        <p>No test history yet. Run some tests to see results here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            testHistory.forEach((entry, index) => {
+                const historyCard = document.createElement('div');
+                historyCard.className = 'bg-white border border-gray-200 rounded-lg p-4 card-hover';
+
+                const timestamp = new Date(entry.timestamp).toLocaleString();
+                const userPromptPreview = entry.userPrompt.length > 100
+                    ? entry.userPrompt.substring(0, 100) + '...'
+                    : entry.userPrompt;
+
+                historyCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Test #${testHistory.length - index}</h4>
+                            <p class="text-sm text-gray-500">${timestamp}</p>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            ${entry.successCount}/${entry.testCount} successful
                         </div>
                     </div>
-                    <div class="response-text">${escapeHtml(result.text)}</div>
-                </div>
-            `;
-            elements.responseContainer.innerHTML = html;
-        }
-
-        // Display comparison response
-        function displayComparisonResponse(result) {
-            const html = `
-                <div class="comparison-view">
-                    <div class="comparison-response">
-                        <div class="comparison-title">🏠 Ollama (Local)</div>
-                        ${result.ollama?.error ?
-                    `<div class="error">${result.ollama.error}</div>` :
-                    `<div class="response-text">${escapeHtml(result.ollama?.text || '')}</div>`
-                }
+                    
+                    <div class="mb-3">
+                        <div class="text-xs text-gray-500 mb-1">User Prompt:</div>
+                        <div class="text-sm bg-gray-50 p-2 rounded">${userPromptPreview}</div>
                     </div>
-                    <div class="comparison-response">
-                        <div class="comparison-title">🌐 OpenAI</div>
-                        ${result.openai?.error ?
-                    `<div class="error">${result.openai.error}</div>` :
-                    `<div class="response-text">${escapeHtml(result.openai?.text || '')}</div>`
-                }
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="text-xs text-gray-500">
+                            Model: ${entry.model} | ${Object.keys(entry.results).length} prompts tested
+                        </div>
+                        <button onclick="viewHistoryDetails(${entry.id})" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                            View Details
+                        </button>
                     </div>
-                </div>
-                ${result.migration_ready ?
-                    '<div style="text-align: center; margin-top: 15px; color: #059669; font-weight: 500;">✅ Migration Ready - Parameters work on both backends</div>' :
-                    '<div style="text-align: center; margin-top: 15px; color: #dc2626; font-weight: 500;">⚠️ Check backend configurations</div>'
+                `;
+
+                container.appendChild(historyCard);
+            });
+        }
+
+        function viewHistoryDetails(entryId) {
+            const entry = testHistory.find(h => h.id === entryId);
+            if (!entry) return;
+
+            // Switch to testing tab and display the historical results
+            showTab('testing');
+            displayResults(entry);
+        }
+
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all test history?')) {
+                testHistory = [];
+                localStorage.removeItem('testHistory');
+                loadHistory();
+            }
+        }
+
+        async function savePrompt(event) {
+            event.preventDefault();
+
+            const editId = document.getElementById('edit-prompt-id').value;
+            const id = document.getElementById('prompt-id').value.trim();
+            const name = document.getElementById('prompt-name').value.trim();
+            const description = document.getElementById('prompt-description').value.trim();
+            const promptText = document.getElementById('prompt-text').value.trim();
+
+            if (!id || !name || !promptText) {
+                showError('Please fill in all required fields');
+                return;
+            }
+
+            const data = { id, name, description, prompt: promptText };
+
+            try {
+                let response;
+                if (editId) {
+                    // Update existing prompt
+                    response = await fetch(`${API_BASE}/system-prompts/${editId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Create new prompt
+                    response = await fetch(`${API_BASE}/system-prompts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
                 }
-            `;
-            elements.responseContainer.innerHTML = html;
+
+                if (response.ok) {
+                    showSuccess(editId ? 'Prompt updated successfully!' : 'Prompt created successfully!');
+                    clearForm();
+                    loadSystemPrompts();
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to save prompt');
+                }
+            } catch (error) {
+                showError('Error saving prompt: ' + error.message);
+            }
         }
 
-        // Clear response
-        function clearResponse() {
-            elements.responseContainer.innerHTML = `
-                <div style="text-align: center; color: #6b7280; padding: 40px;">
-                    <div style="font-size: 3rem; margin-bottom: 10px;">💭</div>
-                    <p>Configure your prompt and click "Generate Response" to see the AI's output here.</p>
-                </div>
-            `;
+        async function deletePrompt(id) {
+            if (!confirm(`Are you sure you want to delete the prompt "${systemPrompts[id].name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/system-prompts/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showSuccess('Prompt deleted successfully!');
+                    loadSystemPrompts();
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to delete prompt');
+                }
+            } catch (error) {
+                showError('Error deleting prompt: ' + error.message);
+            }
         }
 
-        // Show error
+        function clearForm() {
+            document.getElementById('edit-prompt-id').value = '';
+            document.getElementById('prompt-id').value = '';
+            document.getElementById('prompt-id').readOnly = false;
+            document.getElementById('prompt-name').value = '';
+            document.getElementById('prompt-description').value = '';
+            document.getElementById('prompt-text').value = '';
+            document.getElementById('char-count').textContent = '0';
+        }
+
+        function showTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+                tab.classList.remove('bg-white', 'bg-opacity-30');
+                tab.classList.add('bg-white', 'bg-opacity-20');
+            });
+
+            // Show selected panel
+            document.getElementById(`${tabName}-panel`).classList.remove('hidden');
+
+            // Add active class to selected tab
+            document.getElementById(`${tabName}-tab`).classList.remove('bg-opacity-20');
+            document.getElementById(`${tabName}-tab`).classList.add('bg-opacity-30');
+        }
+
         function showError(message) {
-            elements.responseContainer.innerHTML = `
-                <div class="error">
-                    <strong>Error:</strong> ${escapeHtml(message)}
-                </div>
-            `;
+            // Simple alert for now - could be improved with a toast system
+            alert('Error: ' + message);
         }
 
-        // Utility function to escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function showSuccess(message) {
+            // Simple alert for now - could be improved with a toast system
+            alert('Success: ' + message);
         }
-
-        // Initialize the app
-        init();
     </script>
 </body>
 
