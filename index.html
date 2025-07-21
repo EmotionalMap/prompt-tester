@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Testing Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+
+        .output-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-btn {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            border-color: #4f46e5;
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
+
+        .preset-btn.active {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group textarea,
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s ease;
+            font-family: inherit;
+        }
+
+        .form-group textarea:focus,
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .param-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .param-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #6b7280;
+        }
+
+        .param-group input {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-container {
+            margin-top: 20px;
+        }
+
+        .response-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            min-height: 150px;
+            position: relative;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .response-meta {
+            font-size: 0.85rem;
+            color: #6b7280;
+            display: flex;
+            gap: 15px;
+        }
+
+        .response-text {
+            line-height: 1.6;
+            color: #1f2937;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .backend-selector {
+            margin-bottom: 20px;
+        }
+
+        .backend-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .backend-option {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .backend-option.active {
+            border-color: #4f46e5;
+            background: #4f46e5;
+            color: white;
+        }
+
+        .comparison-view {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .comparison-response {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .comparison-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .preset-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .param-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-view {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 LLM Testing Interface</h1>
+            <p>Test your local and OpenAI models with different prompts and parameters</p>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">⚙️ Configuration</h2>
+
+                <div class="backend-selector">
+                    <label>Backend Mode:</label>
+                    <div class="backend-options">
+                        <div class="backend-option active" data-mode="single">Single Backend</div>
+                        <div class="backend-option" data-mode="compare">Compare Both</div>
+                    </div>
+                </div>
+
+                <div class="preset-buttons">
+                    <div class="preset-btn" data-preset="creative">
+                        <strong>Creative</strong><br>
+                        <small>High creativity</small>
+                    </div>
+                    <div class="preset-btn" data-preset="balanced">
+                        <strong>Balanced</strong><br>
+                        <small>General use</small>
+                    </div>
+                    <div class="preset-btn" data-preset="focused">
+                        <strong>Focused</strong><br>
+                        <small>Analytical tasks</small>
+                    </div>
+                    <div class="preset-btn" data-preset="precise">
+                        <strong>Precise</strong><br>
+                        <small>Technical accuracy</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="systemPrompt">System Prompt:</label>
+                    <textarea id="systemPrompt" rows="4"
+                        placeholder="You are a helpful AI assistant...">You are a helpful AI assistant. Provide clear, accurate, and concise responses.</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="userPrompt">User Prompt:</label>
+                    <textarea id="userPrompt" rows="3"
+                        placeholder="Enter your question or prompt here...">Explain quantum computing in simple terms.</textarea>
+                </div>
+
+                <div class="param-grid">
+                    <div class="param-group">
+                        <label for="temperature">Temperature:</label>
+                        <input type="number" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                    </div>
+                    <div class="param-group">
+                        <label for="maxTokens">Max Tokens:</label>
+                        <input type="number" id="maxTokens" min="1" max="4096" value="1024">
+                    </div>
+                    <div class="param-group">
+                        <label for="seed">Seed (optional):</label>
+                        <input type="number" id="seed" placeholder="Leave empty for random">
+                    </div>
+                    <div class="param-group">
+                        <label for="apiUrl">Backend URL:</label>
+                        <input type="text" id="apiUrl" value="http://localhost:4000"
+                            placeholder="http://localhost:4000">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="generateBtn">
+                        <span>🚀</span>
+                        Generate Response
+                    </button>
+                    <button class="btn btn-secondary" id="clearBtn">
+                        <span>🗑️</span>
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2 class="section-title">📝 Response</h2>
+                <div id="responseContainer">
+                    <div style="text-align: center; color: #6b7280; padding: 40px;">
+                        <div style="font-size: 3rem; margin-bottom: 10px;">💭</div>
+                        <p>Configure your prompt and click "Generate Response" to see the AI's output here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentMode = 'single';
+        let presets = {};
+        let isGenerating = false;
+
+        // DOM elements
+        const elements = {
+            backendOptions: document.querySelectorAll('.backend-option'),
+            presetBtns: document.querySelectorAll('.preset-btn'),
+            systemPrompt: document.getElementById('systemPrompt'),
+            userPrompt: document.getElementById('userPrompt'),
+            temperature: document.getElementById('temperature'),
+            maxTokens: document.getElementById('maxTokens'),
+            seed: document.getElementById('seed'),
+            apiUrl: document.getElementById('apiUrl'),
+            generateBtn: document.getElementById('generateBtn'),
+            clearBtn: document.getElementById('clearBtn'),
+            responseContainer: document.getElementById('responseContainer')
+        };
+
+        // Initialize
+        async function init() {
+            await loadPresets();
+            setupEventListeners();
+        }
+
+        // Load presets from backend
+        async function loadPresets() {
+            try {
+                const response = await fetch(`${elements.apiUrl.value}/api/presets`);
+                presets = await response.json();
+            } catch (error) {
+                console.error('Failed to load presets:', error);
+                // Fallback presets
+                presets = {
+                    creative: { temperature: 0.9, max_tokens: 400 },
+                    balanced: { temperature: 0.7, max_tokens: 300 },
+                    focused: { temperature: 0.3, max_tokens: 200 },
+                    precise: { temperature: 0.1, max_tokens: 150 }
+                };
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Backend mode selection
+            elements.backendOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    elements.backendOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    currentMode = option.dataset.mode;
+                });
+            });
+
+            // Preset selection
+            elements.presetBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    elements.presetBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const presetName = btn.dataset.preset;
+                    const preset = presets[presetName];
+
+                    if (preset) {
+                        elements.temperature.value = preset.temperature || 0.7;
+                        elements.maxTokens.value = preset.max_tokens || 1024;
+                    }
+                });
+            });
+
+            // Generate button
+            elements.generateBtn.addEventListener('click', generateResponse);
+
+            // Clear button
+            elements.clearBtn.addEventListener('click', clearResponse);
+
+            // Enter key in textareas
+            elements.userPrompt.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    generateResponse();
+                }
+            });
+        }
+
+        // Generate response
+        async function generateResponse() {
+            if (isGenerating) return;
+
+            const systemPrompt = elements.systemPrompt.value.trim();
+            const userPrompt = elements.userPrompt.value.trim();
+
+            if (!userPrompt) {
+                showError('Please enter a user prompt');
+                return;
+            }
+
+            isGenerating = true;
+            elements.generateBtn.disabled = true;
+            elements.generateBtn.innerHTML = '<div class="spinner"></div>Generating...';
+
+            try {
+                if (currentMode === 'single') {
+                    await generateSingleResponse(systemPrompt, userPrompt);
+                } else {
+                    await generateComparisonResponse(systemPrompt, userPrompt);
+                }
+            } catch (error) {
+                showError(`Generation failed: ${error.message}`);
+            } finally {
+                isGenerating = false;
+                elements.generateBtn.disabled = false;
+                elements.generateBtn.innerHTML = '<span>🚀</span>Generate Response';
+            }
+        }
+
+        // Generate single response
+        async function generateSingleResponse(systemPrompt, userPrompt) {
+            const options = {
+                temperature: parseFloat(elements.temperature.value),
+                max_tokens: parseInt(elements.maxTokens.value)
+            };
+
+            if (elements.seed.value) {
+                options.seed = parseInt(elements.seed.value);
+            }
+
+            const payload = {
+                systemPrompt,
+                userPrompt,
+                options
+            };
+
+            const response = await fetch(`${elements.apiUrl.value}/api/completions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Request failed');
+            }
+
+            const result = await response.json();
+            displaySingleResponse(result);
+        }
+
+        // Generate comparison response
+        async function generateComparisonResponse(systemPrompt, userPrompt) {
+            const options = {
+                temperature: parseFloat(elements.temperature.value),
+                max_tokens: parseInt(elements.maxTokens.value)
+            };
+
+            if (elements.seed.value) {
+                options.seed = parseInt(elements.seed.value);
+            }
+
+            const payload = {
+                systemPrompt,
+                userPrompt,
+                options
+            };
+
+            const response = await fetch(`${elements.apiUrl.value}/api/switch-backend`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error('Comparison request failed');
+            }
+
+            const result = await response.json();
+            displayComparisonResponse(result);
+        }
+
+        // Display single response
+        function displaySingleResponse(result) {
+            const html = `
+                <div class="response-box">
+                    <div class="response-header">
+                        <strong>Response</strong>
+                        <div class="response-meta">
+                            <span>Backend: ${result.backend}</span>
+                            <span>Model: ${result.model}</span>
+                            ${result.performance?.tokens_per_second ?
+                    `<span>Speed: ${result.performance.tokens_per_second.toFixed(1)} tok/s</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="response-text">${escapeHtml(result.text)}</div>
+                </div>
+            `;
+            elements.responseContainer.innerHTML = html;
+        }
+
+        // Display comparison response
+        function displayComparisonResponse(result) {
+            const html = `
+                <div class="comparison-view">
+                    <div class="comparison-response">
+                        <div class="comparison-title">🏠 Ollama (Local)</div>
+                        ${result.ollama?.error ?
+                    `<div class="error">${result.ollama.error}</div>` :
+                    `<div class="response-text">${escapeHtml(result.ollama?.text || '')}</div>`
+                }
+                    </div>
+                    <div class="comparison-response">
+                        <div class="comparison-title">🌐 OpenAI</div>
+                        ${result.openai?.error ?
+                    `<div class="error">${result.openai.error}</div>` :
+                    `<div class="response-text">${escapeHtml(result.openai?.text || '')}</div>`
+                }
+                    </div>
+                </div>
+                ${result.migration_ready ?
+                    '<div style="text-align: center; margin-top: 15px; color: #059669; font-weight: 500;">✅ Migration Ready - Parameters work on both backends</div>' :
+                    '<div style="text-align: center; margin-top: 15px; color: #dc2626; font-weight: 500;">⚠️ Check backend configurations</div>'
+                }
+            `;
+            elements.responseContainer.innerHTML = html;
+        }
+
+        // Clear response
+        function clearResponse() {
+            elements.responseContainer.innerHTML = `
+                <div style="text-align: center; color: #6b7280; padding: 40px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">💭</div>
+                    <p>Configure your prompt and click "Generate Response" to see the AI's output here.</p>
+                </div>
+            `;
+        }
+
+        // Show error
+        function showError(message) {
+            elements.responseContainer.innerHTML = `
+                <div class="error">
+                    <strong>Error:</strong> ${escapeHtml(message)}
+                </div>
+            `;
+        }
+
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+
+</html>
