@@ -449,6 +449,7 @@
                         </div>
                         <div class="flex space-x-2">
                             <button onclick="editPrompt('${id}')" class="text-blue-600 hover:text-blue-700 text-sm">Edit</button>
+                            <button onclick="duplicatePrompt('${id}')" class="text-green-600 hover:text-green-700 text-sm">Duplicate</button>
                             ${id !== 'default' ? `<button onclick="deletePrompt('${id}')" class="text-red-600 hover:text-red-700 text-sm">Delete</button>` : ''}
                         </div>
                     </div>
@@ -935,6 +936,32 @@
                 }
             } catch (error) {
                 showError('Error deleting prompt: ' + error.message);
+            }
+        }
+
+        async function duplicatePrompt(id) {
+            const prompt = systemPrompts[id];
+            if (!prompt) return;
+
+            const newName = window.prompt(`Enter a name for the duplicated prompt:`, `${prompt.name} (Copy)`);
+            if (!newName) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/system-prompts/${id}/duplicate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName })
+                });
+
+                if (response.ok) {
+                    showSuccess('Prompt duplicated successfully!');
+                    loadSystemPrompts();
+                } else {
+                    const error = await response.json();
+                    showError(error.error || 'Failed to duplicate prompt');
+                }
+            } catch (error) {
+                showError('Error duplicating prompt: ' + error.message);
             }
         }
 

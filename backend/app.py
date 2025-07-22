@@ -86,8 +86,15 @@ def completions():
             return jsonify(error=f"System prompt '{prompt_id}' not found"), 404
         modules = prompt_obj.get("modules", {})
         order = prompt_obj.get("order", [])
-        # join in order, skipping missing modules
-        system_prompt_text = "\n\n".join(modules.get(name, "") for name in order)
+        # join in order, skipping missing modules, handle both strings and lists
+        parts = []
+        for name in order:
+            value = modules.get(name, "")
+            if isinstance(value, list):
+                parts.append("\n".join(str(item) for item in value))
+            elif value:
+                parts.append(str(value))
+        system_prompt_text = "\n\n".join(parts)
 
     # Build OpenAI parameters
     user_opts = data.get("options", {})
@@ -230,6 +237,46 @@ def delete_system_prompt(prompt_id):
         "deleted": {"id": prompt_id, **deleted}
     })
 
+@app.route("/api/system-prompts/<prompt_id>/duplicate", methods=["POST"])
+def duplicate_system_prompt(prompt_id):
+    global system_prompts
+    if prompt_id not in system_prompts:
+        return jsonify(error="System prompt not found"), 404
+    
+    original_prompt = system_prompts[prompt_id]
+    data = request.get_json() or {}
+    
+    # Generate new ID based on original name or use provided ID
+    new_id = data.get("id")
+    if not new_id:
+        base_name = original_prompt["name"]
+        counter = 1
+        while True:
+            new_id = f"{prompt_id}_copy_{counter}".lower().replace(" ", "_").replace("-", "_")
+            if new_id not in system_prompts:
+                break
+            counter += 1
+    else:
+        new_id = new_id.lower().replace(" ", "_").replace("-", "_")
+        if new_id in system_prompts:
+            return jsonify(error="System prompt ID already exists"), 409
+    
+    # Create duplicate with new name
+    new_name = data.get("name", f"{original_prompt['name']} (Copy)")
+    
+    system_prompts[new_id] = {
+        "name": new_name,
+        "modules": original_prompt.get("modules", {}).copy(),
+        "order": original_prompt.get("order", []).copy(),
+        "description": original_prompt.get("description", "") + " (Duplicate)",
+        "created_at": datetime.now().isoformat() + "Z"
+    }
+    
+    # Save to file
+    save_prompts_to_file(system_prompts)
+    
+    return jsonify({"id": new_id, **system_prompts[new_id]}), 201
+
 # --- Test Prompts (compares multiple prompts) ---
 
 @app.route("/api/test-prompts", methods=["POST"])
@@ -261,8 +308,15 @@ def test_prompts():
         else:
             order = prompt_obj.get("order", [])
         
-        # Join modules in specified order, skipping missing modules
-        full_system = "\n\n".join(modules.get(name, "") for name in order if modules.get(name))
+        # Join modules in specified order, skipping missing modules, handle both strings and lists
+        parts = []
+        for name in order:
+            value = modules.get(name, "")
+            if isinstance(value, list):
+                parts.append("\n".join(str(item) for item in value))
+            elif value:
+                parts.append(str(value))
+        full_system = "\n\n".join(parts)
 
         test_payload = {
             "systemPrompt": full_system,
