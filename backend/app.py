@@ -15,6 +15,7 @@ CORS(app)
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 MODEL = "gpt-3.5-turbo"
+# MODEL = "gpt-4o-2024-11-20"
 
 DEFAULT_PARAMS = {
     "temperature": 0.7,
@@ -31,10 +32,10 @@ def load_prompts_from_file():
             with open(PROMPTS_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except (json.JSONDecodeError, IOError) as e:
-            print(f"⚠️  Error loading prompts file: {e}")
+            print(f"Error loading prompts file: {e}")
             return get_default_prompts()
     else:
-        print(f"📝 Creating new prompts file: {PROMPTS_FILE}")
+        print(f"Creating new prompts file: {PROMPTS_FILE}")
         return get_default_prompts()
 
 def save_prompts_to_file(prompts):
@@ -42,9 +43,9 @@ def save_prompts_to_file(prompts):
     try:
         with open(PROMPTS_FILE, 'w', encoding='utf-8') as f:
             json.dump(prompts, f, indent=2, ensure_ascii=False)
-        print(f"💾 Saved {len(prompts)} prompts to {PROMPTS_FILE}")
+        print(f"Saved {len(prompts)} prompts to {PROMPTS_FILE}")
     except IOError as e:
-        print(f"⚠️  Error saving prompts file: {e}")
+        print(f"Error saving prompts file: {e}")
 
 def get_default_prompts():
     """Return default system prompts"""
@@ -73,6 +74,7 @@ def completions():
     system_prompt_text = data.get("systemPrompt", "").strip()
     user_prompt = data.get("userPrompt", "").strip()
     prompt_id = data.get("promptId")
+    conversation_history = data.get("conversationHistory", [])
 
     if not user_prompt:
         return jsonify(error="User prompt is required"), 400
@@ -96,10 +98,17 @@ def completions():
     if "seed" in user_opts:
         openai_params["seed"] = user_opts["seed"]
 
-    # Build messages
+    # Build messages with conversation history
     messages = []
     if system_prompt_text:
         messages.append({"role": "system", "content": system_prompt_text})
+    
+    # Add conversation history
+    for msg in conversation_history:
+        if msg.get("role") in ["user", "assistant"] and msg.get("content"):
+            messages.append({"role": msg["role"], "content": msg["content"]})
+    
+    # Add current user message
     messages.append({"role": "user", "content": user_prompt})
 
     payload = {
@@ -301,8 +310,8 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 4000))
     debug = os.getenv("FLASK_DEBUG", "true").lower() == "true"
     if not OPENAI_API_KEY:
-        print("⚠️  WARNING: OPENAI_API_KEY not set.")
-    print(f"🚀 Starting on port {port}, model={MODEL}")
-    print(f"📁 Prompts file: {PROMPTS_FILE}")
-    print(f"💾 Loaded {len(system_prompts)} system prompts")
+        print("WARNING: OPENAI_API_KEY not set.")
+    print(f"Starting on port {port}, model={MODEL}")
+    print(f"Prompts file: {PROMPTS_FILE}")
+    print(f"Loaded {len(system_prompts)} system prompts")
     app.run(host="0.0.0.0", port=port, debug=debug)
