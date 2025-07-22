@@ -14,8 +14,8 @@ CORS(app)
 # Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
-MODEL = "gpt-3.5-turbo"
-# MODEL = "gpt-4o-2024-11-20"
+# MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4o-2024-11-20"
 
 DEFAULT_PARAMS = {
     "temperature": 0.7,
