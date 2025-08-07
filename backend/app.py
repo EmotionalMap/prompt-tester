@@ -11,7 +11,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Configuration
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 # MODEL = "gpt-3.5-turbo"
@@ -22,7 +22,7 @@ DEFAULT_PARAMS = {
     "max_tokens": 1024,
 }
 
-# File-based storage
+
 PROMPTS_FILE = "system_prompts.json"
 
 def load_prompts_from_file():
@@ -70,7 +70,7 @@ def completions():
         return jsonify(error="OPENAI_API_KEY not set"), 500
 
     data = request.get_json() or {}
-    # Backwards-compatible: allow passing a full systemPrompt string
+
     system_prompt_text = data.get("systemPrompt", "").strip()
     user_prompt = data.get("userPrompt", "").strip()
     prompt_id = data.get("promptId")
@@ -79,14 +79,13 @@ def completions():
     if not user_prompt:
         return jsonify(error="User prompt is required"), 400
 
-    # If promptId provided, assemble modules into one string
     if prompt_id:
         prompt_obj = system_prompts.get(prompt_id)
         if not prompt_obj:
             return jsonify(error=f"System prompt '{prompt_id}' not found"), 404
         modules = prompt_obj.get("modules", {})
         order = prompt_obj.get("order", [])
-        # join in order, skipping missing modules, handle both strings and lists
+
         parts = []
         for name in order:
             value = modules.get(name, "")
@@ -96,7 +95,7 @@ def completions():
                 parts.append(str(value))
         system_prompt_text = "\n\n".join(parts)
 
-    # Build OpenAI parameters
+
     user_opts = data.get("options", {})
     openai_params = {
         "temperature": user_opts.get("temperature", DEFAULT_PARAMS["temperature"]),
@@ -105,17 +104,17 @@ def completions():
     if "seed" in user_opts:
         openai_params["seed"] = user_opts["seed"]
 
-    # Build messages with conversation history
+    # conversation history
     messages = []
     if system_prompt_text:
         messages.append({"role": "system", "content": system_prompt_text})
     
-    # Add conversation history
+
     for msg in conversation_history:
         if msg.get("role") in ["user", "assistant"] and msg.get("content"):
             messages.append({"role": msg["role"], "content": msg["content"]})
     
-    # Add current user message
+
     messages.append({"role": "user", "content": user_prompt})
 
     payload = {
@@ -158,7 +157,7 @@ def completions():
     except Exception as e:
         return jsonify(error=f"Unexpected error: {str(e)}"), 500
 
-# --- System Prompts CRUD ---
+
 
 @app.route("/api/system-prompts", methods=["GET"])
 def get_system_prompts():
@@ -192,7 +191,7 @@ def create_system_prompt():
         "created_at": datetime.now().isoformat() + "Z"
     }
     
-    # Save to file
+
     save_prompts_to_file(system_prompts)
     
     return jsonify({"id": pid, **system_prompts[pid]}), 201
@@ -209,12 +208,12 @@ def update_system_prompt(prompt_id):
     if "description" in data:
         system_prompts[prompt_id]["description"] = data["description"].strip()
     if "modules" in data and isinstance(data["modules"], dict):
-        # Replace entire modules dict
+
         system_prompts[prompt_id]["modules"] = data["modules"]
     if "order" in data and isinstance(data["order"], list):
         system_prompts[prompt_id]["order"] = data["order"]
     
-    # Save to file
+
     save_prompts_to_file(system_prompts)
 
     return jsonify({"id": prompt_id, **system_prompts[prompt_id]})
@@ -228,8 +227,7 @@ def delete_system_prompt(prompt_id):
         return jsonify(error="Cannot delete the default system prompt"), 400
 
     deleted = system_prompts.pop(prompt_id)
-    
-    # Save to file
+
     save_prompts_to_file(system_prompts)
     
     return jsonify({
@@ -246,7 +244,7 @@ def duplicate_system_prompt(prompt_id):
     original_prompt = system_prompts[prompt_id]
     data = request.get_json() or {}
     
-    # Generate new ID based on original name or use provided ID
+ 
     new_id = data.get("id")
     if not new_id:
         base_name = original_prompt["name"]
@@ -261,7 +259,7 @@ def duplicate_system_prompt(prompt_id):
         if new_id in system_prompts:
             return jsonify(error="System prompt ID already exists"), 409
     
-    # Create duplicate with new name
+
     new_name = data.get("name", f"{original_prompt['name']} (Copy)")
     
     system_prompts[new_id] = {
@@ -272,12 +270,12 @@ def duplicate_system_prompt(prompt_id):
         "created_at": datetime.now().isoformat() + "Z"
     }
     
-    # Save to file
+
     save_prompts_to_file(system_prompts)
     
     return jsonify({"id": new_id, **system_prompts[new_id]}), 201
 
-# --- Test Prompts (compares multiple prompts) ---
+
 
 @app.route("/api/test-prompts", methods=["POST"])
 def test_prompts():
@@ -285,7 +283,7 @@ def test_prompts():
     user_prompt = data.get("userPrompt", "").strip()
     prompt_ids = data.get("promptIds", [])
     options = data.get("options", {})
-    modules_order = data.get("modulesOrder")  # Optional custom module ordering
+    modules_order = data.get("modulesOrder")  
 
     if not user_prompt:
         return jsonify(error="User prompt is required"), 400
@@ -298,17 +296,17 @@ def test_prompts():
             results[pid] = {"error": f"System prompt '{pid}' not found"}
             continue
 
-        # assemble full prompt
+ 
         prompt_obj = system_prompts[pid]
         modules = prompt_obj["modules"]
         
-        # Use custom module order if provided, otherwise use saved order
+
         if modules_order:
             order = modules_order
         else:
             order = prompt_obj.get("order", [])
         
-        # Join modules in specified order, skipping missing modules, handle both strings and lists
+  
         parts = []
         for name in order:
             value = modules.get(name, "")
@@ -335,7 +333,7 @@ def test_prompts():
                     "usage": data_resp.get("usage", {}),
                     "finish_reason": data_resp.get("finish_reason"),
                     "parameters_used": data_resp.get("parameters_used", {}),
-                    "modules_used": order  # Include which modules were used
+                    "modules_used": order  
                 }
             else:
                 err = resp.get_json()
