@@ -23,7 +23,8 @@ DEFAULT_PARAMS = {
 }
 
 
-PROMPTS_FILE = "system_prompts.json"
+# Always resolve prompts file relative to this backend directory
+PROMPTS_FILE = os.path.join(os.path.dirname(__file__), "system_prompts.json")
 
 def load_prompts_from_file():
     """Load system prompts from JSON file"""
@@ -161,6 +162,11 @@ def completions():
 
 @app.route("/api/system-prompts", methods=["GET"])
 def get_system_prompts():
+    fmt = (request.args.get('format') or '').lower()
+    if fmt == 'list':
+        items = [{"id": pid, **p} for pid, p in system_prompts.items()]
+        items.sort(key=lambda x: x.get('id', ''))
+        return jsonify(items)
     return jsonify(system_prompts)
 
 @app.route("/api/system-prompts/<prompt_id>", methods=["GET"])
@@ -354,6 +360,7 @@ def health_check():
         "model": MODEL,
         "api_key_configured": bool(OPENAI_API_KEY),
         "system_prompts_count": len(system_prompts),
+        "system_prompts_ids": list(system_prompts.keys()),
         "prompts_file": PROMPTS_FILE,
         "prompts_file_exists": os.path.exists(PROMPTS_FILE)
     })
